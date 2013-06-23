@@ -2,7 +2,7 @@
 (function() {
 
   $(document).ready(function() {
-    var Ball, analytic_ball, canvas, clear_canvas, context, draw_circle, euler_ball, iter, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, setup_scene, time, timestep, update_fn, vxdata, vxplot, xdata, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
+    var Ball, analytic_ball, canvas, clear_canvas, context, draw_circle, euler_ball, iter, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, running, setup_scene, start, time, timer, timestep, update_fn, vxdata, vxplot, xdata, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
     canvas = $("canvas")[0];
     context = canvas.getContext("2d");
     clear_canvas = function() {
@@ -99,7 +99,20 @@
       return time += timestep;
     };
     update_fn();
-    return setInterval(update_fn, 10);
+    timer = 0;
+    running = false;
+    start = function() {
+      if (!running) {
+        timer = setInterval(update_fn, 10);
+        return running = true;
+      }
+    };
+    $('#startbtn')[0].onclick = start;
+    $('#stopbtn')[0].onclick = function() {
+      clearInterval(timer);
+      return running = false;
+    };
+    return start();
   });
 
 }).call(this);

@@ -77,7 +77,17 @@ $(document).ready ->
         time += timestep
 
     update_fn()
-    setInterval update_fn, 10
+    timer = 0
+    running = false
+    start = ->
+        if not running
+            timer = setInterval update_fn, 10
+            running = true
+    $('#startbtn')[0].onclick = start
+    $('#stopbtn')[0].onclick = -> 
+        clearInterval timer
+        running = false
+    start()
 
     
 
