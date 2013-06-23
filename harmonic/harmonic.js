@@ -2,7 +2,7 @@
 (function() {
 
   $(document).ready(function() {
-    var Ball, analytic_ball, canvas, clear_canvas, context, draw_circle, euler_ball, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, setup_scene, time, timestep, update_fn, vxplot, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
+    var Ball, analytic_ball, canvas, clear_canvas, context, draw_circle, euler_ball, iter, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, setup_scene, time, timestep, update_fn, vxdata, vxplot, xdata, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
     canvas = $("canvas")[0];
     context = canvas.getContext("2d");
     clear_canvas = function() {
@@ -80,8 +80,11 @@
     euler_ball = new Ball(1.5, "green");
     time = 0;
     timestep = .01;
+    iter = 0;
     xplot = $("#xplot");
+    xdata = new Array;
     vxplot = $("#vxplot");
+    vxdata = new Array;
     update_fn = function() {
       var ball, _i, _len, _ref2;
       setup_scene();
@@ -92,6 +95,7 @@
         ball = _ref2[_i];
         ball.add_to_scene();
       }
+      iter += 1;
       return time += timestep;
     };
     update_fn();

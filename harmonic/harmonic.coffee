@@ -60,9 +60,12 @@ $(document).ready ->
     euler_ball = new Ball 1.5, "green"
     time = 0
     timestep = .01
+    iter = 0
 
     xplot = $("#xplot")
+    xdata = new Array
     vxplot = $("#vxplot")
+    vxdata = new Array
 
     update_fn = ->
         setup_scene()
@@ -70,6 +73,7 @@ $(document).ready ->
         euler_ball.update_euler(timestep)
         for ball in [analytic_ball, euler_ball]
             ball.add_to_scene()
+        iter += 1
         time += timestep
 
     update_fn()
