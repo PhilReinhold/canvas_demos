@@ -43,18 +43,26 @@ $(document).ready ->
         constructor: (@x, @color) ->
             @amp = x
             @vx = 0
+            @xhistory = new Array
+            @vxhistory = new Array
 
         add_to_scene: ->
             draw_circle(@x, potential_fn(@x), 5, @color)
+    
+        update_history: (t) ->
+            @xhistory.push([t, @x])
+            @vxhistory.push([t, @vx])
 
         update_analytic: (t) ->
             freq = 1
             @x = @amp * Math.cos(freq * t)
             @vx = -@amp * Math.sin(freq * t)
+            @update_history(t)
 
-        update_euler: (dt) ->
+        update_euler: (t, dt) ->
             @vx -= dt * potential_fn_grad(@x)
             @x += dt * @vx
+            @update_history(t)
 
     analytic_ball = new Ball 1.5, "blue"
     euler_ball = new Ball 1.5, "green"
@@ -62,17 +70,18 @@ $(document).ready ->
     timestep = .01
     iter = 0
 
-    xplot = $("#xplot")
-    xdata = new Array
-    vxplot = $("#vxplot")
-    vxdata = new Array
+    xplot = $("#xplot")[0]
+    vxplot = $("#vxplot")[0]
 
     update_fn = ->
         setup_scene()
         analytic_ball.update_analytic(time)
-        euler_ball.update_euler(timestep)
+        euler_ball.update_euler(time, timestep)
         for ball in [analytic_ball, euler_ball]
             ball.add_to_scene()
+        $.plot(xplot, [analytic_ball.xhistory, euler_ball.xhistory])
+        $.plot(vxplot, [analytic_ball.vxhistory, euler_ball.vxhistory])
+
         iter += 1
         time += timestep
 
