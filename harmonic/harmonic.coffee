@@ -64,8 +64,20 @@ $(document).ready ->
             @x += dt * @vx
             @update_history(t)
 
+        update_rk4: (t, dt) ->
+            k1 = -potential_fn_grad(@x)
+            k2 = -potential_fn_grad(@x + dt*k1/2.0)
+            k3 = -potential_fn_grad(@x + dt*k2/2.0)
+            k4 = -potential_fn_grad(@x + dt*k3)
+            @vx += dt * (k1 + 2*k2 + 2*k3 + k4) / 6.0
+            @x += dt * @vx
+            @update_history(t)
+
+
     analytic_ball = new Ball 1.5, "blue"
     euler_ball = new Ball 1.5, "green"
+    rk_ball = new Ball 1.5, "red"
+    balls = [analytic_ball, euler_ball, rk_ball]
     time = 0
     timestep = .01
     iter = 0
@@ -77,10 +89,11 @@ $(document).ready ->
         setup_scene()
         analytic_ball.update_analytic(time)
         euler_ball.update_euler(time, timestep)
-        for ball in [analytic_ball, euler_ball]
+        rk_ball.update_rk4(time, timestep)
+        for ball in balls
             ball.add_to_scene()
-        $.plot(xplot, [analytic_ball.xhistory, euler_ball.xhistory])
-        $.plot(vxplot, [analytic_ball.vxhistory, euler_ball.vxhistory])
+        $.plot(xplot, (b.xhistory for b in balls))
+        $.plot(vxplot, (b.vxhistory for b in balls))
 
         iter += 1
         time += timestep

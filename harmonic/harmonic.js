@@ -2,7 +2,7 @@
 (function() {
 
   $(document).ready(function() {
-    var Ball, analytic_ball, canvas, clear_canvas, context, draw_circle, euler_ball, iter, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, running, setup_scene, start, time, timer, timestep, update_fn, vxplot, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
+    var Ball, analytic_ball, balls, canvas, clear_canvas, context, draw_circle, euler_ball, iter, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, rk_ball, running, setup_scene, start, time, timer, timestep, update_fn, vxplot, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
     canvas = $("canvas")[0];
     context = canvas.getContext("2d");
     clear_canvas = function() {
@@ -82,28 +82,57 @@
         return this.update_history(t);
       };
 
+      Ball.prototype.update_rk4 = function(t, dt) {
+        var k1, k2, k3, k4;
+        k1 = -potential_fn_grad(this.x);
+        k2 = -potential_fn_grad(this.x + dt * k1 / 2.0);
+        k3 = -potential_fn_grad(this.x + dt * k2 / 2.0);
+        k4 = -potential_fn_grad(this.x + dt * k3);
+        this.vx += dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0;
+        this.x += dt * this.vx;
+        return this.update_history(t);
+      };
+
       return Ball;
 
     })();
     analytic_ball = new Ball(1.5, "blue");
     euler_ball = new Ball(1.5, "green");
+    rk_ball = new Ball(1.5, "red");
+    balls = [analytic_ball, euler_ball, rk_ball];
     time = 0;
     timestep = .01;
     iter = 0;
     xplot = $("#xplot")[0];
     vxplot = $("#vxplot")[0];
     update_fn = function() {
-      var ball, _i, _len, _ref2;
+      var b, ball, _i, _len;
       setup_scene();
       analytic_ball.update_analytic(time);
       euler_ball.update_euler(time, timestep);
-      _ref2 = [analytic_ball, euler_ball];
-      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-        ball = _ref2[_i];
+      rk_ball.update_rk4(time, timestep);
+      for (_i = 0, _len = balls.length; _i < _len; _i++) {
+        ball = balls[_i];
         ball.add_to_scene();
       }
-      $.plot(xplot, [analytic_ball.xhistory, euler_ball.xhistory]);
-      $.plot(vxplot, [analytic_ball.vxhistory, euler_ball.vxhistory]);
+      $.plot(xplot, (function() {
+        var _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = balls.length; _j < _len1; _j++) {
+          b = balls[_j];
+          _results.push(b.xhistory);
+        }
+        return _results;
+      })());
+      $.plot(vxplot, (function() {
+        var _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = balls.length; _j < _len1; _j++) {
+          b = balls[_j];
+          _results.push(b.vxhistory);
+        }
+        return _results;
+      })());
       iter += 1;
       return time += timestep;
     };
