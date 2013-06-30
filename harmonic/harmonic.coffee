@@ -32,8 +32,8 @@ $(document).ready ->
             context.lineTo pix_x, pix_y
         context.stroke()
 
-    potential_fn = (x) -> x*x
-    potential_fn_grad = (x) -> x / 2.0
+    potential_fn = (x) -> x*x / 2.0
+    potential_fn_grad = (x) -> x
 
     setup_scene = ->
         clear_canvas()
@@ -73,43 +73,49 @@ $(document).ready ->
             @x += dt * @vx
             @update_history(t)
 
+    class BallSim
+        constructor: ->
+            @xplot = $("#xplot")[0]
+            @vxplot = $("#vxplot")[0]
+            @timestep_spinner = $("#timestep")[0]
 
-    analytic_ball = new Ball 1.5, "blue"
-    euler_ball = new Ball 1.5, "green"
-    rk_ball = new Ball 1.5, "red"
-    balls = [analytic_ball, euler_ball, rk_ball]
-    time = 0
-    timestep = .01
-    iter = 0
+            $('#startbtn')[0].onclick = => @start()
+            $('#stopbtn')[0].onclick = => @stop()
+            $('#resetbtn')[0].onclick = => @initialize_state()
 
-    xplot = $("#xplot")[0]
-    vxplot = $("#vxplot")[0]
+            @running = false
+            @initialize_state()
+            @update_fn()
+            @start()
 
-    update_fn = ->
-        setup_scene()
-        analytic_ball.update_analytic(time)
-        euler_ball.update_euler(time, timestep)
-        rk_ball.update_rk4(time, timestep)
-        for ball in balls
-            ball.add_to_scene()
-        $.plot(xplot, (b.xhistory for b in balls))
-        $.plot(vxplot, (b.vxhistory for b in balls))
+        initialize_state: ->
+            @analytic_ball = new Ball 1.5, "blue"
+            @euler_ball = new Ball 1.5, "green"
+            @rk_ball = new Ball 1.5, "red"
+            @balls = [@analytic_ball, @euler_ball, @rk_ball]
+            @time = 0
 
-        iter += 1
-        time += timestep
+        update_fn: ->
+            console.log(@xplot, @timestep_spinner, @running, @analytic_ball, @balls, @time)
+            setup_scene()
+            timestep = parseFloat(@timestep_spinner.value)
+            @analytic_ball.update_analytic(@time)
+            @euler_ball.update_euler(@time, timestep)
+            @rk_ball.update_rk4(@time, timestep)
+            for ball in @balls
+                ball.add_to_scene()
+            $.plot(@xplot, (b.xhistory for b in @balls))
+            $.plot(@vxplot, (b.vxhistory for b in @balls))
 
-    update_fn()
-    timer = 0
-    running = false
-    start = ->
-        if not running
-            timer = setInterval update_fn, 10
-            running = true
-    $('#startbtn')[0].onclick = start
-    $('#stopbtn')[0].onclick = -> 
-        clearInterval timer
-        running = false
-    start()
+            @time += timestep
 
-    
+        start: ->
+            if not @running
+                @timer = setInterval (=> @update_fn()), 50
+                @running = true
 
+        stop: ->
+            clearInterval @timer
+            @running = false
+
+    sim = new BallSim

@@ -2,7 +2,7 @@
 (function() {
 
   $(document).ready(function() {
-    var Ball, analytic_ball, balls, canvas, clear_canvas, context, draw_circle, euler_ball, iter, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, rk_ball, running, setup_scene, start, time, timer, timestep, update_fn, vxplot, xmax, xmin, xplot, ymax, ymin, _ref, _ref1;
+    var Ball, BallSim, canvas, clear_canvas, context, draw_circle, linterp, pix_to_real_x, pix_to_real_y, plot_fn, potential_fn, potential_fn_grad, real_to_pix_x, real_to_pix_y, setup_scene, sim, xmax, xmin, ymax, ymin, _ref, _ref1;
     canvas = $("canvas")[0];
     context = canvas.getContext("2d");
     clear_canvas = function() {
@@ -39,10 +39,10 @@
       return context.stroke();
     };
     potential_fn = function(x) {
-      return x * x;
+      return x * x / 2.0;
     };
     potential_fn_grad = function(x) {
-      return x / 2.0;
+      return x;
     };
     setup_scene = function() {
       clear_canvas();
@@ -96,61 +96,91 @@
       return Ball;
 
     })();
-    analytic_ball = new Ball(1.5, "blue");
-    euler_ball = new Ball(1.5, "green");
-    rk_ball = new Ball(1.5, "red");
-    balls = [analytic_ball, euler_ball, rk_ball];
-    time = 0;
-    timestep = .01;
-    iter = 0;
-    xplot = $("#xplot")[0];
-    vxplot = $("#vxplot")[0];
-    update_fn = function() {
-      var b, ball, _i, _len;
-      setup_scene();
-      analytic_ball.update_analytic(time);
-      euler_ball.update_euler(time, timestep);
-      rk_ball.update_rk4(time, timestep);
-      for (_i = 0, _len = balls.length; _i < _len; _i++) {
-        ball = balls[_i];
-        ball.add_to_scene();
+    BallSim = (function() {
+
+      function BallSim() {
+        var _this = this;
+        this.xplot = $("#xplot")[0];
+        this.vxplot = $("#vxplot")[0];
+        this.timestep_spinner = $("#timestep")[0];
+        $('#startbtn')[0].onclick = function() {
+          return _this.start();
+        };
+        $('#stopbtn')[0].onclick = function() {
+          return _this.stop();
+        };
+        $('#resetbtn')[0].onclick = function() {
+          return _this.initialize_state();
+        };
+        this.running = false;
+        this.initialize_state();
+        this.update_fn();
+        this.start();
       }
-      $.plot(xplot, (function() {
-        var _j, _len1, _results;
-        _results = [];
-        for (_j = 0, _len1 = balls.length; _j < _len1; _j++) {
-          b = balls[_j];
-          _results.push(b.xhistory);
+
+      BallSim.prototype.initialize_state = function() {
+        this.analytic_ball = new Ball(1.5, "blue");
+        this.euler_ball = new Ball(1.5, "green");
+        this.rk_ball = new Ball(1.5, "red");
+        this.balls = [this.analytic_ball, this.euler_ball, this.rk_ball];
+        return this.time = 0;
+      };
+
+      BallSim.prototype.update_fn = function() {
+        var b, ball, timestep, _i, _len, _ref2;
+        console.log(this.xplot, this.timestep_spinner, this.running, this.analytic_ball, this.balls, this.time);
+        setup_scene();
+        timestep = parseFloat(this.timestep_spinner.value);
+        this.analytic_ball.update_analytic(this.time);
+        this.euler_ball.update_euler(this.time, timestep);
+        this.rk_ball.update_rk4(this.time, timestep);
+        _ref2 = this.balls;
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          ball = _ref2[_i];
+          ball.add_to_scene();
         }
-        return _results;
-      })());
-      $.plot(vxplot, (function() {
-        var _j, _len1, _results;
-        _results = [];
-        for (_j = 0, _len1 = balls.length; _j < _len1; _j++) {
-          b = balls[_j];
-          _results.push(b.vxhistory);
+        $.plot(this.xplot, (function() {
+          var _j, _len1, _ref3, _results;
+          _ref3 = this.balls;
+          _results = [];
+          for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+            b = _ref3[_j];
+            _results.push(b.xhistory);
+          }
+          return _results;
+        }).call(this));
+        $.plot(this.vxplot, (function() {
+          var _j, _len1, _ref3, _results;
+          _ref3 = this.balls;
+          _results = [];
+          for (_j = 0, _len1 = _ref3.length; _j < _len1; _j++) {
+            b = _ref3[_j];
+            _results.push(b.vxhistory);
+          }
+          return _results;
+        }).call(this));
+        return this.time += timestep;
+      };
+
+      BallSim.prototype.start = function() {
+        var _this = this;
+        if (!this.running) {
+          this.timer = setInterval((function() {
+            return _this.update_fn();
+          }), 50);
+          return this.running = true;
         }
-        return _results;
-      })());
-      iter += 1;
-      return time += timestep;
-    };
-    update_fn();
-    timer = 0;
-    running = false;
-    start = function() {
-      if (!running) {
-        timer = setInterval(update_fn, 10);
-        return running = true;
-      }
-    };
-    $('#startbtn')[0].onclick = start;
-    $('#stopbtn')[0].onclick = function() {
-      clearInterval(timer);
-      return running = false;
-    };
-    return start();
+      };
+
+      BallSim.prototype.stop = function() {
+        clearInterval(this.timer);
+        return this.running = false;
+      };
+
+      return BallSim;
+
+    })();
+    return sim = new BallSim;
   });
 
 }).call(this);
